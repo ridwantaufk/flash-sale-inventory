@@ -17,7 +17,6 @@ CREATE TABLE reservations (
     user_id text NOT NULL,
     quantity integer NOT NULL,
     status text NOT NULL DEFAULT 'active',
-    idempotency_key text,
     created_at timestamptz NOT NULL DEFAULT now(),
     expires_at timestamptz NOT NULL,
     confirmed_at timestamptz,
@@ -36,10 +35,6 @@ CREATE TABLE reservations (
 CREATE INDEX reservations_expiry_queue ON reservations (expires_at)
 WHERE
     status = 'active';
-
-CREATE UNIQUE INDEX reservations_idempotency ON reservations (user_id, idempotency_key)
-WHERE
-    idempotency_key IS NOT NULL;
 
 CREATE VIEW live_reservation_totals AS
 SELECT i.item_id, i.total_stock, i.reserved_stock, COALESCE(SUM(r.quantity), 0)::integer AS live_reserved

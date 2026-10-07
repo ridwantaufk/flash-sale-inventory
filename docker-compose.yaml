@@ -18,5 +18,27 @@ services:
       timeout: 3s
       retries: 20
 
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-flashsale}:${POSTGRES_PASSWORD:-flashsale}@postgres:5432/${POSTGRES_DB:-flashsale}?sslmode=disable
+      HTTP_ADDR: ":8080"
+      RESERVATION_TTL: ${RESERVATION_TTL:-5m}
+      REAPER_INTERVAL: ${REAPER_INTERVAL:-5s}
+      SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-15s}
+      STATEMENT_TIMEOUT: ${STATEMENT_TIMEOUT:-5s}
+      HANDLER_TIMEOUT: ${HANDLER_TIMEOUT:-10s}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
 volumes:
   postgres_data:
